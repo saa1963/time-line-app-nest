@@ -1,4 +1,4 @@
-import { LogonDto } from 'src/dto/logon.dto';
+import { LogonDto } from './logon.dto';
 
 export abstract class UserStorage {
   protected logonDto: LogonDto[];

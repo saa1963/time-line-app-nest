@@ -1,13 +1,13 @@
 import { Controller, Post, Body, Get, UseGuards, Req } from '@nestjs/common';
-import { RegisterDto } from 'src/dto/register.dto';
-import { UserStorage } from 'src/storage/UserStorage';
-import { AuthGuard } from '@nestjs/passport';
-import { LogonDto } from 'src/dto/logon.dto';
+import { RegisterDto } from './register.dto';
+import { UserStorage } from './auth.UserStorage';
+import { LogonDto } from './logon.dto';
 import { JwtService } from '@nestjs/jwt';
+import { LocalAuthGuard } from './local-auth.guard';
 
 //curl -X POST http://localhost:3000/api/register/log -d "{\"Login\": \"qqq\", \"Password\": \"222\"}" -H "Content-Type: application/json"
 
-@Controller('api/register')
+@Controller('auth')
 export class UsersController {
   constructor(
     private readonly userStorage: UserStorage,
@@ -20,7 +20,7 @@ export class UsersController {
     return true;
   }
 
-  @Post('reg')
+  @Post('newuser')
   regusterUser(@Body() registerDto: RegisterDto): string {
     if (
       this.userStorage.Save(
@@ -33,8 +33,8 @@ export class UsersController {
     else return 'Неудачная регистрация пользователя';
   }
 
-  @UseGuards(AuthGuard('local'))
-  @Post('log')
+  @UseGuards(LocalAuthGuard)
+  @Post('logon')
   async logonUser1(@Req() req) {
     // если Guard пройден, то к req присоединено свойство user (то что возвращает LocalStrategy.validate())
     const user: LogonDto = req.user;

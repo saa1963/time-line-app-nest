@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { UserStorage } from './UserStorage';
+import { UserStorage } from './auth.UserStorage';
 import path = require('path');
 import fs = require('fs');
 import readline = require('readline');
-import { LogonDto } from 'src/dto/logon.dto';
+import { LogonDto } from './logon.dto';
 
 @Injectable()
 export class FileUserStorage extends UserStorage {

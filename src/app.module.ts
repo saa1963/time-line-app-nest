@@ -1,35 +1,17 @@
 import { Module } from '@nestjs/common';
-import { FileUserStorage } from './storage/FileUserStorage';
-import { UserStorage } from './storage/UserStorage';
-import { UsersController } from './users/users.controller';
-import { TlStorage } from './storage/TlStorage';
-import { TlFileStorage } from './storage/TlFileStorage';
 import { ConfigModule } from '@nestjs/config';
-import { LocalStrategy } from './storage/local.strategy';
-import { JwtModule } from '@nestjs/jwt';
-import { jwtConstants } from './constants';
+import { AuthModule } from './auth/auth.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
-    JwtModule.register({
-      secret: jwtConstants.secret,
-      signOptions: { expiresIn: '12h' },
-    }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    AuthModule,
+    StorageModule,
   ],
-  controllers: [UsersController],
-  providers: [
-    {
-      provide: UserStorage,
-      useClass: FileUserStorage,
-    },
-    {
-      provide: TlStorage,
-      useClass: TlFileStorage,
-    },
-    LocalStrategy,
-  ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

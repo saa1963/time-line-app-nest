@@ -1,0 +1,2 @@
+curl -X POST http://localhost:3000/auth/logon -d "{\"Login\": \"qqq\", \"Password\": \"222\"}" -H "Content-Type: application/json"
+curl http://localhost:3000/storage/load?tlname=qwerty -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InFxcSIsImlhdCI6MTY1MzkzNzE0MywiZXhwIjoxNjUzOTgwMzQzfQ.YYHAA1k4U4O1EQOl16qMAAmKiOCgdhOEaO3ckehcUEc"

@@ -11,10 +11,7 @@ export class FileUserStorage extends UserStorage {
   private filePath: string;
   constructor(private configService: ConfigService) {
     super();
-    this.filePath = path.join(
-      this.configService.get<string>('TLA_WORKPLACE'),
-      'user.dat',
-    );
+    this.filePath = path.join(this.configService.get<string>('TLA_WORKPLACE'), 'user.dat');
     if (fs.existsSync(this.filePath)) {
       const fileStream = fs.createReadStream(this.filePath);
       const rl = readline.createInterface({
@@ -33,18 +30,13 @@ export class FileUserStorage extends UserStorage {
     if (await this.Contains(login)) {
       return false;
     }
-    fs.appendFileSync(
-      this.filePath,
-      login + '^' + email + '^' + password + '\n',
-    );
+    fs.appendFileSync(this.filePath, login + '^' + email + '^' + password + '\n');
     this.logonDto.push({ Login: login, Password: password });
     return true;
   }
   async Contains(login: string): Promise<boolean> {
     return (
-      this.logonDto.findIndex(
-        (value) => value.Login.toUpperCase() === login.toUpperCase(),
-      ) !== -1
+      this.logonDto.findIndex((value) => value.Login.toUpperCase() === login.toUpperCase()) !== -1
     );
   }
   async Remove(login: string): Promise<boolean> {
@@ -55,9 +47,7 @@ export class FileUserStorage extends UserStorage {
   }
   async Logon(login: string, password: string): Promise<LogonDto | null> {
     const idx = this.logonDto.findIndex(
-      (value) =>
-        value.Login.toUpperCase() === login.toUpperCase() &&
-        value.Password === password,
+      (value) => value.Login.toUpperCase() === login.toUpperCase() && value.Password === password,
     );
     if (idx !== -1) {
       return this.logonDto[idx];

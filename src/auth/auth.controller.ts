@@ -5,14 +5,11 @@ import { LogonDto } from './logon.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LocalAuthGuard } from './local-auth.guard';
 
-//curl -X POST http://localhost:3000/api/register/log -d "{\"Login\": \"qqq\", \"Password\": \"222\"}" -H "Content-Type: application/json"
+//curl -X POST http://localhost:3000/auth/logon -d "{\"Login\": \"qqq\", \"Password\": \"222\"}" -H "Content-Type: application/json"
 
 @Controller('auth')
 export class UsersController {
-  constructor(
-    private readonly userStorage: UserStorage,
-    private readonly jwtService: JwtService,
-  ) {}
+  constructor(private readonly userStorage: UserStorage, private readonly jwtService: JwtService) {}
 
   @Get('logout')
   logoutUser(): boolean {
@@ -22,14 +19,7 @@ export class UsersController {
 
   @Post('newuser')
   regusterUser(@Body() registerDto: RegisterDto): string {
-    if (
-      this.userStorage.Save(
-        registerDto.Login,
-        registerDto.Email,
-        registerDto.Password1,
-      )
-    )
-      return '';
+    if (this.userStorage.Save(registerDto.Login, registerDto.Email, registerDto.Password1)) return '';
     else return 'Неудачная регистрация пользователя';
   }
 

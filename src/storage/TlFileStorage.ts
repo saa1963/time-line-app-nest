@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TlStorage } from './TlStorage';
-import fs1 = require('fs');
+import fs1 = require('fs/promises');
 import path = require('path');
+import constants = require('constants');
 
 @Injectable()
 export class TlFileStorage extends TlStorage {
@@ -14,18 +15,34 @@ export class TlFileStorage extends TlStorage {
   private Fname(name: string, username: string): string {
     return path.join(this.basePath, username + '.' + name + '.json');
   }
-  Load(name: string, username: string): string {
+  async Load(name: string, username: string): Promise<string> {
     const fname = this.Fname(name, username);
-    if (this.IsExist(name, username)) return fs1.readFileSync(fname, 'utf8');
+    if (await this.IsExist(name, username)) return await fs1.readFile(fname, 'utf8');
     else throw new NotFoundException(`Не найден файл ${fname}`);
   }
-  IsExist(name: string, username: string): boolean {
-    return fs1.existsSync(this.Fname(name, username));
+  async IsExist(name: string, username: string): Promise<boolean> {
+    try {
+      await fs1.access(this.Fname(name, username), constants.R_OK | constants.W_OK);
+      return true;
+    } catch {
+      return false;
+    }
   }
-  List(): string[] {
-    return [];
+  async List(user: string): Promise<string[]> {
+    const re = new RegExp('^' + user + '..*.json$');
+    const files = await fs1.readdir(this.basePath, {
+      encoding: 'utf-8',
+      withFileTypes: true,
+    });
+    return files
+      .filter((value) => {
+        console.log(value.name);
+        return value.isFile() && re.test(value.name);
+      })
+      .map((vl) => vl.name);
   }
-  Save(header: string, body: string): boolean {
+  async Save(header: string, body: string, username: string): Promise<boolean> {
+    await fs1.writeFile(this.Fname(header, username), body, { encoding: 'utf-8' });
     return true;
   }
 }

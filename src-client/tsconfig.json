@@ -1,0 +1,16 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "noEmitOnError": true,
+    "noImplicitAny": false,
+    "removeComments": false,
+    "sourceMap": true,
+    "target": "es6",
+    "module": "commonjs"
+  },
+  "exclude": [
+    "node_modules",
+    "obj",
+    "bin"
+  ]
+}

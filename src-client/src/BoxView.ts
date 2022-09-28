@@ -10,7 +10,7 @@ export class BoxView {
 
   public async Show(): Promise<void> {
     return new Promise<void>((resolve) => {
-      $('#tmBoxModal').modal();
+      $('#tmBoxModal').modal('show');
       this.btnBoxOk.onclick = async () => {
         $('#tmBoxModal').modal('hide');
         resolve();

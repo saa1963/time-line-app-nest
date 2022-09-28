@@ -23989,8 +23989,7 @@ class BoxView {
     Show() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve) => {
-                console.log('BoxView.Show');
-                $('#tmBoxModal').modal();
+                $('#tmBoxModal').modal('show');
                 this.btnBoxOk.onclick = () => __awaiter(this, void 0, void 0, function* () {
                     $('#tmBoxModal').modal('hide');
                     resolve();
@@ -24550,7 +24549,6 @@ class MainPresenter {
                     .catch();
             }
             catch (err) {
-                console.log(err);
                 yield new BoxView_1.BoxView(err).Show();
             }
         });
@@ -26580,7 +26578,7 @@ class TlistView {
         });
     }
     GetSelectedValue() {
-        return $('#files_list').children("option:selected").val();
+        return $('#files_list').children('option:selected').val();
     }
     SetError(err) {
         $('#load_error').text(err);

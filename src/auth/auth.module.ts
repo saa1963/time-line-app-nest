@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './constants';
 import { FileUserStorage } from './auth.FileUserStorage';
@@ -10,6 +10,7 @@ import { LocalAuthGuard } from './local-auth.guard';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 
+@Global()
 @Module({
   imports: [
     JwtModule.register({

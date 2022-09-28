@@ -23832,15 +23832,17 @@ class ApiClient {
         return __awaiter(this, void 0, void 0, function* () {
             if ((login || '').trim() !== '' && (password || '').trim() !== '') {
                 const passwordMd5 = stringutils_1.stringUtils.md5(password);
-                const response = yield fetch('api/register/log', {
+                const response = yield fetch('auth/logon', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ Login: login, Password: passwordMd5 })
+                    body: JSON.stringify({ Login: login, Password: passwordMd5 }),
                 });
                 if (response.ok) {
-                    return yield response.text();
+                    this.jwtToken = yield response.json();
+                    localStorage.setItem('tokenTL', this.jwtToken.access_token);
+                    return '';
                 }
                 else {
                     return this.HttpError(response);
@@ -23853,28 +23855,51 @@ class ApiClient {
     }
     SaveTL(model) {
         return __awaiter(this, void 0, void 0, function* () {
-            const response = yield fetch('api/storage/save', {
+            const response = yield fetch('save', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer ' + localStorage.getItem('tokenTL'),
                 },
-                body: JSON.stringify({ s1: model.Name, s2: JSON.stringify(model) })
+                body: JSON.stringify({ s1: model.Name, s2: JSON.stringify(model) }),
             });
+            console.log(response);
             if (response.ok)
                 return '';
             else
                 return 'Ошибка: ' + (yield response.text());
         });
     }
+    TestToken() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const response = yield fetch('test', {
+                method: 'GET',
+                headers: {
+                    Authorization: 'Bearer ' + localStorage.getItem('tokenTL'),
+                },
+            });
+            if (response.ok) {
+                return yield response.text();
+            }
+            else {
+                throw '';
+            }
+        });
+    }
     DoLogout() {
         return __awaiter(this, void 0, void 0, function* () {
-            const response = yield fetch('api/register/logout');
-            return Boolean(yield response.text());
+            localStorage.removeItem('tokenTL');
+            return true;
         });
     }
     GetUsersList() {
         return __awaiter(this, void 0, void 0, function* () {
-            const response = yield fetch('api/storage/list');
+            const response = yield fetch('list', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer ' + localStorage.getItem('tokenTL'),
+                },
+            });
             if (response.ok) {
                 return yield response.json();
             }
@@ -23885,12 +23910,11 @@ class ApiClient {
     }
     GetTL(value) {
         return __awaiter(this, void 0, void 0, function* () {
-            const response = yield fetch('api/storage/load', {
-                method: 'POST',
+            const response = yield fetch('load?' + new URLSearchParams({ tlname: value }), {
+                method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json'
+                    Authorization: 'Bearer ' + localStorage.getItem('tokenTL'),
                 },
-                body: JSON.stringify({ s1: value, s2: '' })
             });
             if (response.ok) {
                 const tline = yield response.json();
@@ -23910,25 +23934,23 @@ class ApiClient {
                 return 'Не совпадают пароли';
             }
             const passwordMd5 = stringutils_1.stringUtils.md5(password1);
-            console.log(password1);
-            console.log(passwordMd5);
-            const response = yield fetch('api/register/reg', {
+            const response = yield fetch('auth/newuser', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     Login: login,
                     Email: email,
                     Password1: passwordMd5,
-                    Password2: passwordMd5
-                })
+                    Password2: passwordMd5,
+                }),
             });
             if (response.ok) {
                 return '';
             }
             else {
-                'Статус - ' + response.status + ' ' + response.statusText;
+                return (yield response.json()).message;
             }
         });
     }
@@ -23967,6 +23989,7 @@ class BoxView {
     Show() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve) => {
+                console.log('BoxView.Show');
                 $('#tmBoxModal').modal();
                 this.btnBoxOk.onclick = () => __awaiter(this, void 0, void 0, function* () {
                     $('#tmBoxModal').modal('hide');
@@ -24342,7 +24365,7 @@ class MainModel {
     }
     Remove(i) {
         if (!this.validIndex(i))
-            throw "Неверный индекс";
+            throw 'Неверный индекс';
         this.models.splice(i, 1);
         this.e_RemoveTimeLine.dispatch(i);
         return true;
@@ -24352,7 +24375,7 @@ class MainModel {
     }
     Item(i) {
         if (!this.validIndex(i))
-            throw "Неверный индекс";
+            throw 'Неверный индекс';
         return this.models[i];
     }
     get evAddTimeLine() {
@@ -24433,7 +24456,7 @@ const UploadFileView_1 = __webpack_require__(/*! ../UploadFileView */ "./UploadF
 const PeriodContextMenu_1 = __webpack_require__(/*! ../PeriodContextMenu */ "./PeriodContextMenu.ts");
 class MainPresenter {
     constructor(view, model) {
-        this.isAuthenticated = false;
+        //private isAuthenticated = false;
         // ******************* Свойства *********************************
         // свойство Period
         this.mPeriod = TLEvent_1.EnumPeriod.day;
@@ -24479,7 +24502,7 @@ class MainPresenter {
     OpenNewTLDialog() {
         const model = new AddPeriodModel_1.AddPeriodModel();
         const today = new Date();
-        model.Name = "";
+        model.Name = '';
         model.IsPeriod = false;
         model.BeginType = TLEvent_1.EnumPeriod.day;
         model.BeginDayDay = today.getDate();
@@ -24502,7 +24525,8 @@ class MainPresenter {
         model.EndDecadeCentury = 21;
         model.EndCentury = 21;
         const view = new AddPeriodView_1.AddPeriodView(model);
-        view.ShowDialog()
+        view
+            .ShowDialog()
             .then((value) => __awaiter(this, void 0, void 0, function* () {
             if (value) {
                 const period = TLPeriod_1.TLPeriod.CreateTLPeriodWithArgs(value.Name, value.IsPeriod, value.BeginType, value.BeginDayDay, value.BeginDayMonth, value.BeginDayYear, value.BeginMonthMonth, value.BeginMonthYear, value.BeginYear, value.BeginDecadeDecade, value.BeginDecadeCentury, value.BeginCentury, value.EndType, value.EndDayDay, value.EndDayMonth, value.EndDayYear, value.EndMonthMonth, value.EndMonthYear, value.EndYear, value.EndDecadeDecade, value.EndDecadeCentury, value.EndCentury);
@@ -24515,17 +24539,18 @@ class MainPresenter {
     OpenLoadTLDialog() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                if (!this.isAuthenticated)
-                    throw "Не выполнен вход.";
+                //if (!this.isAuthenticated) throw 'Не выполнен вход.';
                 const value = yield ApiClient_1.ApiClient.getInstance().GetUsersList();
                 const view = new TlistView_1.TlistView(value);
-                view.ShowDialog()
+                view
+                    .ShowDialog()
                     .then((value) => __awaiter(this, void 0, void 0, function* () {
                     this.model.Add(value);
                 }))
                     .catch();
             }
             catch (err) {
+                console.log(err);
                 yield new BoxView_1.BoxView(err).Show();
             }
         });
@@ -24536,11 +24561,12 @@ class MainPresenter {
                 const view = new UploadFileView_1.UploadFileView();
                 //let value = await ApiClient.getInstance().GetUsersList()
                 //let view = new TlistView(value)
-                view.ShowDialog()
+                view
+                    .ShowDialog()
                     .then((value) => __awaiter(this, void 0, void 0, function* () {
                     this.model.Add(value);
                 }))
-                    .catch();
+                    .catch(() => null);
             }
             catch (err) {
                 yield new BoxView_1.BoxView(err).Show();
@@ -24550,8 +24576,7 @@ class MainPresenter {
     OnSave(idx) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                if (!this.isAuthenticated)
-                    throw "Не выполнен вход. Сохранение невозможно.";
+                //if (!this.isAuthenticated) throw 'Не выполнен вход. Сохранение невозможно.';
                 yield ApiClient_1.ApiClient.getInstance().SaveTL(this.model.Item(idx));
                 yield new BoxView_1.BoxView('Данные сохранены').Show();
             }
@@ -24595,7 +24620,7 @@ class MainPresenter {
     // Function to download data to a file
     download(data, filename, type) {
         const file = new Blob([data], { type: type });
-        const a = document.createElement("a");
+        const a = document.createElement('a');
         const url = URL.createObjectURL(file);
         a.href = url;
         a.download = filename;
@@ -24668,7 +24693,8 @@ class MainPresenter {
             model.Name = period.Name;
             model.IsPeriod = period.IsPeriod;
             model.BeginType = period.Begin.Type;
-            switch (period.Begin.Type) { // eslint-disable-line no-fallthrough
+            switch (period.Begin.Type // eslint-disable-line no-fallthrough
+            ) {
                 case TLEvent_1.EnumPeriod.day: {
                     const ymd = dateutils_1.DateUtils.YMDFromAD(period.Begin.Day);
                     model.BeginDayDay = ymd.day;
@@ -24707,12 +24733,12 @@ class MainPresenter {
                     model.EndCentury = period.End.Century;
                     break;
             }
-            view.ShowDialog()
+            view
+                .ShowDialog()
                 .then((value) => __awaiter(this, void 0, void 0, function* () {
                 if (value) {
                     const tempPeriod = TLPeriod_1.TLPeriod.CreateTLPeriodWithArgs(value.Name, value.IsPeriod, value.BeginType, value.BeginDayDay, value.BeginDayMonth, value.BeginDayYear, value.BeginMonthMonth, value.BeginMonthYear, value.BeginYear, value.BeginDecadeDecade, value.BeginDecadeCentury, value.BeginCentury, value.EndType, value.EndDayDay, value.EndDayMonth, value.EndDayYear, value.EndMonthMonth, value.EndMonthYear, value.EndYear, value.EndDecadeDecade, value.EndDecadeCentury, value.EndCentury);
-                    period.Name = tempPeriod.Name,
-                        period.Begin = tempPeriod.Begin;
+                    (period.Name = tempPeriod.Name), (period.Begin = tempPeriod.Begin);
                     period.End = tempPeriod.End;
                     period.mBeginDay = tempPeriod.mBeginDay;
                     period.mEndDay = tempPeriod.mEndDay;
@@ -24728,7 +24754,7 @@ class MainPresenter {
         return __awaiter(this, void 0, void 0, function* () {
             const model = new AddPeriodModel_1.AddPeriodModel();
             const today = new Date();
-            model.Name = "";
+            model.Name = '';
             model.IsPeriod = false;
             model.BeginType = TLEvent_1.EnumPeriod.day;
             model.BeginDayDay = today.getDate();
@@ -24751,7 +24777,8 @@ class MainPresenter {
             model.EndDecadeCentury = 21;
             model.EndCentury = 21;
             const view = new AddPeriodView_1.AddPeriodView(model);
-            view.ShowDialog()
+            view
+                .ShowDialog()
                 .then((value) => __awaiter(this, void 0, void 0, function* () {
                 if (value) {
                     const period0 = this.model.Item(idx);
@@ -24761,7 +24788,7 @@ class MainPresenter {
                         period0.Add(period);
                     }
                     else {
-                        new BoxView_1.BoxView("Добавляемый период не попадает в интервал Линии Времени").Show();
+                        new BoxView_1.BoxView('Добавляемый период не попадает в интервал Линии Времени').Show();
                     }
                 }
             }))
@@ -24805,7 +24832,11 @@ class MainPresenter {
                 cur = dateutils_1.DateUtils.DaysFromAD(dt.getFullYear(), dt.getMonth() + 1, dt.getDate());
                 break;
             case TLEvent_1.EnumPeriod.month:
-                cur = dateutils_1.DateUtils.getMonthFromYMD({ year: dt.getFullYear(), month: dt.getMonth() + 1, day: dt.getDate() });
+                cur = dateutils_1.DateUtils.getMonthFromYMD({
+                    year: dt.getFullYear(),
+                    month: dt.getMonth() + 1,
+                    day: dt.getDate(),
+                });
                 break;
             case TLEvent_1.EnumPeriod.year:
                 cur = dt.getFullYear();
@@ -25012,22 +25043,13 @@ class MainPresenter {
     }
     OnLogin() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this.isAuthenticated) {
-                const loginModel = new LoginModel_1.LoginModel(Globals_1.Globals.getCookie('timelineuser') || '');
-                const loginView = new LoginView_1.LoginView(loginModel);
-                if (yield loginView.ShowDialog()) {
-                    this.isAuthenticated = true;
-                    return loginModel.Login;
-                }
-                else {
-                    return null;
-                }
+            const loginModel = new LoginModel_1.LoginModel(Globals_1.Globals.getCookie('timelineuser') || '');
+            const loginView = new LoginView_1.LoginView(loginModel);
+            if (yield loginView.ShowDialog()) {
+                return loginModel.Login;
             }
             else {
-                if (yield ApiClient_1.ApiClient.getInstance().DoLogout()) {
-                    this.isAuthenticated = false;
-                    return null;
-                }
+                return null;
             }
         });
     }
@@ -25038,6 +25060,11 @@ class MainPresenter {
             if (yield regView.ShowDialog()) {
                 yield new BoxView_1.BoxView(`Пользователь ${regModel.Login} успешно зарегистрирован`).Show();
             }
+        });
+    }
+    OnTest() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const login = yield ApiClient_1.ApiClient.getInstance().TestToken();
         });
     }
     OnScaleForward(idx) {
@@ -25169,6 +25196,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MainView = void 0;
 const MainPresenter_1 = __webpack_require__(/*! ./MainPresenter */ "./Main/MainPresenter.ts");
+const ApiClient_1 = __webpack_require__(/*! ../ApiClient */ "./ApiClient.ts");
 const ZoomIn = __webpack_require__(/*! ./images/icons8-zoom-in-50.png */ "./Main/images/icons8-zoom-in-50.png");
 //import ZoomOut from "./images/icons8-zoom-out-50.png";
 const ZoomOut = __webpack_require__(/*! ./images/icons8-zoom-out-50.png */ "./Main/images/icons8-zoom-out-50.png");
@@ -25183,14 +25211,21 @@ class MainView {
         this.btnLoadFromBD = document.getElementById('load');
         this.tls = document.getElementById('tls');
         this.Presenter = new MainPresenter_1.MainPresenter(this, model);
+        ApiClient_1.ApiClient.getInstance()
+            .TestToken()
+            .then((login) => this.SetUserLabel(login))
+            .catch(() => this.ClearUserLabel());
         this.aLogin.onclick = () => __awaiter(this, void 0, void 0, function* () {
-            const login = yield this.Presenter.OnLogin();
-            if (login) {
-                this.SetUserLabel(login);
-            }
-            else {
+            ApiClient_1.ApiClient.getInstance()
+                .TestToken()
+                .then(() => __awaiter(this, void 0, void 0, function* () {
+                ApiClient_1.ApiClient.getInstance().DoLogout();
                 this.ClearUserLabel();
-            }
+            }))
+                .catch(() => __awaiter(this, void 0, void 0, function* () {
+                const login = yield this.Presenter.OnLogin();
+                this.SetUserLabel(login);
+            }));
         });
         this.aReg.onclick = () => __awaiter(this, void 0, void 0, function* () {
             yield this.Presenter.OnRegister();
@@ -25282,7 +25317,7 @@ class MainView {
         return __awaiter(this, void 0, void 0, function* () {
             const table = document.getElementsByTagName('table')[0];
             const row = document.createElement('tr');
-            row.id = "row-header-" + idx;
+            row.id = 'row-header-' + idx;
             let td = document.createElement('td');
             if (isMain) {
                 td.classList.add('tl_head');
@@ -25314,7 +25349,7 @@ class MainView {
     CreateDropDown(header, mas) {
         const btnMenu = document.createElement('button');
         btnMenu.type = 'button';
-        btnMenu.setAttribute('data-toggle', 'dropdown');
+        btnMenu.setAttribute('data-bs-toggle', 'dropdown');
         btnMenu.classList.add('btn');
         btnMenu.classList.add('btn-secondary');
         btnMenu.classList.add('btn-block');
@@ -25342,32 +25377,32 @@ class MainView {
                 header: 'Добавить',
                 handler: () => __awaiter(this, void 0, void 0, function* () {
                     yield this.Presenter.OnAddPeriod(idx);
-                })
+                }),
             },
             {
                 header: 'Сохранить',
                 handler: () => __awaiter(this, void 0, void 0, function* () {
                     yield this.Presenter.OnSave(idx);
-                })
+                }),
             },
             {
                 header: 'В файл',
                 handler: () => __awaiter(this, void 0, void 0, function* () {
                     yield this.Presenter.OnSaveToFile(idx);
-                })
+                }),
             },
             {
                 header: 'Показать все',
                 handler: () => __awaiter(this, void 0, void 0, function* () {
                     yield this.Presenter.OnShowAll(idx);
-                })
+                }),
             },
             {
                 header: 'Закрыть',
                 handler: () => __awaiter(this, void 0, void 0, function* () {
                     yield this.Presenter.OnClose(idx);
-                })
-            }
+                }),
+            },
         ]);
     }
     DrawEventsRow(idx, items) {
@@ -26599,7 +26634,7 @@ class UploadFileView {
     }
     ShowDialog() {
         return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 this.tbModal.modal('show');
                 this.btnUploadFile.onclick = () => __awaiter(this, void 0, void 0, function* () {
                     if (this.value) {
@@ -26620,7 +26655,7 @@ class UploadFileView {
                 });
                 this.btnCancelUploadFile.onclick = () => __awaiter(this, void 0, void 0, function* () {
                     this.tbModal.modal('hide');
-                    resolve(null);
+                    reject();
                 });
             });
         });

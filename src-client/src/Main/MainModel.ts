@@ -1,10 +1,10 @@
-﻿import { SimpleEventDispatcher, ISimpleEvent } from "ste-simple-events";
-import { TLPeriod } from "../TLPeriod";
-import { EnumPeriod } from "../TLEvent";
+﻿import { SimpleEventDispatcher, ISimpleEvent } from 'ste-simple-events';
+import { TLPeriod } from '../TLPeriod';
+import { EnumPeriod } from '../TLEvent';
 
 export class MainModel {
   private static instance: MainModel;
-  private models: TLPeriod[] = []
+  private models: TLPeriod[] = [];
 
   public static getInstance() {
     if (!MainModel.instance) {
@@ -15,32 +15,32 @@ export class MainModel {
   }
 
   public Add(model: TLPeriod): number {
-    const idx: number = this.models.length
-    const rt = this.models.push(model)
+    const idx: number = this.models.length;
+    const rt = this.models.push(model);
     model.evAddPeriod.subscribe((period) => {
-      this.e_AddPeriod.dispatch([idx, period])
-    })
+      this.e_AddPeriod.dispatch([idx, period]);
+    });
     model.evRemovePeriod.subscribe(() => {
-      this.e_RemovePeriod.dispatch(idx)
-    })
-    this.e_AddTimeLine.dispatch(model)
-    return rt
+      this.e_RemovePeriod.dispatch(idx);
+    });
+    this.e_AddTimeLine.dispatch(model);
+    return rt;
   }
 
   public Remove(i: number): boolean {
-    if (!this.validIndex(i)) throw "Неверный индекс"
-    this.models.splice(i, 1)
-    this.e_RemoveTimeLine.dispatch(i)
-    return true
+    if (!this.validIndex(i)) throw 'Неверный индекс';
+    this.models.splice(i, 1);
+    this.e_RemoveTimeLine.dispatch(i);
+    return true;
   }
 
   public get Count(): number {
-    return this.models.length
+    return this.models.length;
   }
 
   public Item(i: number): TLPeriod {
-    if (!this.validIndex(i)) throw "Неверный индекс"
-    return this.models[i]
+    if (!this.validIndex(i)) throw 'Неверный индекс';
+    return this.models[i];
   }
 
   private e_AddTimeLine = new SimpleEventDispatcher<TLPeriod>();
@@ -64,24 +64,24 @@ export class MainModel {
   }
 
   private validIndex(i: number): boolean {
-    if (!this.models) return false
-    if (this.models.length === 0) return false
-    if (i < 0 || i >= this.models.length) return false
-    return true
+    if (!this.models) return false;
+    if (this.models.length === 0) return false;
+    if (i < 0 || i >= this.models.length) return false;
+    return true;
   }
 
   public GetSlice(n: number, period: EnumPeriod): TLPeriod[] {
-    const items: TLPeriod[] = []
+    const items: TLPeriod[] = [];
     for (const q of this.models) {
-      q.getAllSuitablePeriodsFromHierarchy(n, n, period, items)
+      q.getAllSuitablePeriodsFromHierarchy(n, n, period, items);
     }
-    const items1: TLPeriod[] = []
+    const items1: TLPeriod[] = [];
     for (const it of items) {
       if (!items1.includes(it)) {
-        items1.push(it)
+        items1.push(it);
       }
     }
-    items1.sort((a, b) => a.mBeginDay - b.mBeginDay)
-    return items1
+    items1.sort((a, b) => a.mBeginDay - b.mBeginDay);
+    return items1;
   }
 }

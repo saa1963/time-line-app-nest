@@ -1,5 +1,6 @@
-﻿import { MainPresenter, InterfaceExTLPeriod } from "./MainPresenter";
-import { MainModel } from "./MainModel";
+﻿import { MainPresenter, InterfaceExTLPeriod } from './MainPresenter';
+import { MainModel } from './MainModel';
+import { ApiClient } from '../ApiClient';
 const ZoomIn = require('./images/icons8-zoom-in-50.png');
 //import ZoomOut from "./images/icons8-zoom-out-50.png";
 const ZoomOut = require('./images/icons8-zoom-out-50.png');
@@ -9,181 +10,190 @@ export class MainView {
   private Presenter: MainPresenter;
 
   // элементы страницы
-  private aLogin = document.getElementById('btnLogin') as HTMLAnchorElement
-  private aReg = document.getElementById('btnReg') as HTMLAnchorElement
-  private btnNewTL = document.getElementById('newTimeline') as HTMLButtonElement
-  private lblUser = document.getElementById('lblUser') as HTMLLabelElement
-  private btnUploadFile = document.getElementById('load_file') as HTMLButtonElement
-  private btnLoadFromBD = document.getElementById('load') as HTMLButtonElement
-  private tls = document.getElementById('tls')
-  private mainTable: HTMLTableElement
+  private aLogin = document.getElementById('btnLogin') as HTMLAnchorElement;
+  private aReg = document.getElementById('btnReg') as HTMLAnchorElement;
+  private btnNewTL = document.getElementById('newTimeline') as HTMLButtonElement;
+  private lblUser = document.getElementById('lblUser') as HTMLLabelElement;
+  private btnUploadFile = document.getElementById('load_file') as HTMLButtonElement;
+  private btnLoadFromBD = document.getElementById('load') as HTMLButtonElement;
+  private tls = document.getElementById('tls');
+  private mainTable: HTMLTableElement;
 
   constructor(model: MainModel) {
-    this.Presenter = new MainPresenter(this, model)
+    this.Presenter = new MainPresenter(this, model);
+
+    ApiClient.getInstance()
+      .TestToken()
+      .then((login) => this.SetUserLabel(login))
+      .catch(() => this.ClearUserLabel());
 
     this.aLogin.onclick = async () => {
-      const login = await this.Presenter.OnLogin()
-      if (login) {
-        this.SetUserLabel(login)
-      } else {
-        this.ClearUserLabel()
-      }
-    }
+      ApiClient.getInstance()
+        .TestToken()
+        .then(async () => {
+          ApiClient.getInstance().DoLogout();
+          this.ClearUserLabel();
+        })
+        .catch(async () => {
+          const login = await this.Presenter.OnLogin();
+          this.SetUserLabel(login);
+        });
+    };
     this.aReg.onclick = async () => {
-      await this.Presenter.OnRegister()
-    }
+      await this.Presenter.OnRegister();
+    };
     this.btnNewTL.onclick = () => {
-      this.Presenter.OpenNewTLDialog()
-    }
+      this.Presenter.OpenNewTLDialog();
+    };
     this.btnLoadFromBD.onclick = () => {
-      this.Presenter.OpenLoadTLDialog()
-    }
+      this.Presenter.OpenLoadTLDialog();
+    };
     this.btnUploadFile.onclick = () => {
-      this.Presenter.UploadFile()
-    }
+      this.Presenter.UploadFile();
+    };
     document.getElementById('prev_period').onclick = () => {
-      this.Presenter.OnPrevPeriod()
-    }
+      this.Presenter.OnPrevPeriod();
+    };
     document.getElementById('next_period').onclick = () => {
-      this.Presenter.OnNextPeriod()
-    }
+      this.Presenter.OnNextPeriod();
+    };
     document.getElementById('prev_page').onclick = () => {
-      this.Presenter.OnPrevPage()
-    }
+      this.Presenter.OnPrevPage();
+    };
     document.getElementById('next_page').onclick = () => {
-      this.Presenter.OnNextPage()
-    }
+      this.Presenter.OnNextPage();
+    };
     window.onresize = () => {
-      this.Presenter.Draw()
-    }
+      this.Presenter.Draw();
+    };
   }
 
   public ClearContent() {
     if (this.mainTable) {
-      this.tls.removeChild(this.mainTable)
+      this.tls.removeChild(this.mainTable);
     }
   }
 
   private SetUserLabel(user: string): void {
-    this.lblUser.textContent = user
-    this.lblUser.style.display = 'unset'
-    this.aLogin.textContent = 'Выход'
+    this.lblUser.textContent = user;
+    this.lblUser.style.display = 'unset';
+    this.aLogin.textContent = 'Выход';
   }
 
   private ClearUserLabel(): void {
-    this.lblUser.style.display = 'none'
-    this.aLogin.textContent = 'Вход'
+    this.lblUser.style.display = 'none';
+    this.aLogin.textContent = 'Вход';
   }
 
   public DrawDates(dates: [string[], number[]]) {
-    this.mainTable = document.createElement('table') as HTMLTableElement
-    this.mainTable.cellSpacing = '2'
-    const row = document.createElement('tr')
-    row.classList.add('date')
+    this.mainTable = document.createElement('table') as HTMLTableElement;
+    this.mainTable.cellSpacing = '2';
+    const row = document.createElement('tr');
+    row.classList.add('date');
     for (let i = 0; i < dates[0].length; ++i) {
-      const td = document.createElement('td')
-      td.classList.add('date_cell')
-      td.id = 'i' + i
+      const td = document.createElement('td');
+      td.classList.add('date_cell');
+      td.id = 'i' + i;
 
-      const btnGroup = document.createElement('div') as HTMLDivElement
-      btnGroup.classList.add('d-flex', 'justify-content-between')
+      const btnGroup = document.createElement('div') as HTMLDivElement;
+      btnGroup.classList.add('d-flex', 'justify-content-between');
 
-      const btnZoomOut = document.createElement('button') as HTMLButtonElement
-      btnZoomOut.classList.add('btn', 'border-0', 'm-0', 'p-0')
+      const btnZoomOut = document.createElement('button') as HTMLButtonElement;
+      btnZoomOut.classList.add('btn', 'border-0', 'm-0', 'p-0');
       btnZoomOut.onclick = () => {
-        this.Presenter.OnScaleBack(i)
-      }
-      const imgZoomOut = document.createElement('img') as HTMLImageElement
-      imgZoomOut.src = ZoomOut
-      imgZoomOut.width = 20
-      imgZoomOut.height = 20
-      btnZoomOut.append(imgZoomOut)
-      btnGroup.append(btnZoomOut)
+        this.Presenter.OnScaleBack(i);
+      };
+      const imgZoomOut = document.createElement('img') as HTMLImageElement;
+      imgZoomOut.src = ZoomOut;
+      imgZoomOut.width = 20;
+      imgZoomOut.height = 20;
+      btnZoomOut.append(imgZoomOut);
+      btnGroup.append(btnZoomOut);
 
-      btnGroup.append(document.createTextNode(dates[0][i]))
+      btnGroup.append(document.createTextNode(dates[0][i]));
 
-      const btnZoomIn = document.createElement('button') as HTMLButtonElement
-      btnZoomIn.classList.add('btn', 'border-0', 'm-0', 'p-0')
+      const btnZoomIn = document.createElement('button') as HTMLButtonElement;
+      btnZoomIn.classList.add('btn', 'border-0', 'm-0', 'p-0');
       btnZoomIn.onclick = () => {
-        this.Presenter.OnScaleForward(i)
-      }
-      const imgZoomIn = document.createElement('img') as HTMLImageElement
-      imgZoomIn.src = ZoomIn
-      imgZoomIn.width = 20
-      imgZoomIn.height = 20
-      btnZoomIn.append(imgZoomIn)
-      btnGroup.append(btnZoomIn)
+        this.Presenter.OnScaleForward(i);
+      };
+      const imgZoomIn = document.createElement('img') as HTMLImageElement;
+      imgZoomIn.src = ZoomIn;
+      imgZoomIn.width = 20;
+      imgZoomIn.height = 20;
+      btnZoomIn.append(imgZoomIn);
+      btnGroup.append(btnZoomIn);
 
-      td.append(btnGroup)
+      td.append(btnGroup);
       td.ondblclick = (ev) => {
-        ev.preventDefault()
-        this.Presenter.OnShowSlice(dates[1][i])
-      }
-      row.append(td)
+        ev.preventDefault();
+        this.Presenter.OnShowSlice(dates[1][i]);
+      };
+      row.append(td);
     }
-    this.mainTable.append(row)
-    this.tls.append(this.mainTable)
+    this.mainTable.append(row);
+    this.tls.append(this.mainTable);
   }
 
   public async DrawHeader(idx: number, s: string, isMain: boolean) {
-    const table = document.getElementsByTagName('table')[0]
-    const row = document.createElement('tr')
-    row.id = "row-header-" + idx
-    let td = document.createElement('td') as HTMLTableDataCellElement
+    const table = document.getElementsByTagName('table')[0];
+    const row = document.createElement('tr');
+    row.id = 'row-header-' + idx;
+    let td = document.createElement('td') as HTMLTableDataCellElement;
     if (isMain) {
-      td.classList.add('tl_head')
+      td.classList.add('tl_head');
     } else {
-      td.classList.add('tl_head_sub')
+      td.classList.add('tl_head_sub');
     }
     td.ondragenter = (ev) => {
       ev.preventDefault();
-      (ev.target as HTMLTableCellElement).classList.add('period_cell_drop')
-    }
+      (ev.target as HTMLTableCellElement).classList.add('period_cell_drop');
+    };
     td.ondragleave = (ev) => {
-      (ev.target as HTMLTableCellElement).classList.remove('period_cell_drop')
-    }
+      (ev.target as HTMLTableCellElement).classList.remove('period_cell_drop');
+    };
     td.ondragover = (ev) => {
       ev.preventDefault();
-    }
-    td.ondrop = this.createDrophandler(idx, -1)
-    td.colSpan = this.Presenter.MainLineCount - 1
-    const txt = document.createTextNode(s)
-    td.append(txt)
-    row.append(td)
+    };
+    td.ondrop = this.createDrophandler(idx, -1);
+    td.colSpan = this.Presenter.MainLineCount - 1;
+    const txt = document.createTextNode(s);
+    td.append(txt);
+    row.append(td);
 
-    td = document.createElement('td') as HTMLTableDataCellElement
-    td.append(this.CreateTLDropDown(idx))
-    row.append(td)
-    table.append(row)
+    td = document.createElement('td') as HTMLTableDataCellElement;
+    td.append(this.CreateTLDropDown(idx));
+    row.append(td);
+    table.append(row);
   }
 
   private CreateDropDown(header: string, mas: { header: string; handler: (ev) => void }[]) {
-    const btnMenu = document.createElement('button') as HTMLButtonElement
-    btnMenu.type = 'button'
-    btnMenu.setAttribute('data-toggle', 'dropdown')
-    btnMenu.classList.add('btn')
-    btnMenu.classList.add('btn-secondary')
-    btnMenu.classList.add('btn-block')
-    btnMenu.classList.add('dropdown-toggle')
-    btnMenu.textContent = header
-    const divGroup = document.createElement('div') as HTMLDivElement
-    divGroup.classList.add('dropdown-menu')
+    const btnMenu = document.createElement('button') as HTMLButtonElement;
+    btnMenu.type = 'button';
+    btnMenu.setAttribute('data-bs-toggle', 'dropdown');
+    btnMenu.classList.add('btn');
+    btnMenu.classList.add('btn-secondary');
+    btnMenu.classList.add('btn-block');
+    btnMenu.classList.add('dropdown-toggle');
+    btnMenu.textContent = header;
+    const divGroup = document.createElement('div') as HTMLDivElement;
+    divGroup.classList.add('dropdown-menu');
 
     for (const item of mas) {
-      const newMenuItem = document.createElement('a') as HTMLAnchorElement
-      newMenuItem.classList.add('dropdown-item')
-      newMenuItem.textContent = item.header
-      newMenuItem.href = '#'
-      newMenuItem.onclick = item.handler
-      divGroup.append(newMenuItem)
+      const newMenuItem = document.createElement('a') as HTMLAnchorElement;
+      newMenuItem.classList.add('dropdown-item');
+      newMenuItem.textContent = item.header;
+      newMenuItem.href = '#';
+      newMenuItem.onclick = item.handler;
+      divGroup.append(newMenuItem);
     }
 
-    const divDropDown = document.createElement('div') as HTMLDivElement
-    divDropDown.classList.add('dropdown')
-    divDropDown.append(btnMenu)
-    divDropDown.append(divGroup)
+    const divDropDown = document.createElement('div') as HTMLDivElement;
+    divDropDown.classList.add('dropdown');
+    divDropDown.append(btnMenu);
+    divDropDown.append(divGroup);
 
-    return divDropDown
+    return divDropDown;
   }
 
   private CreateTLDropDown(idx: number): HTMLDivElement {
@@ -191,98 +201,99 @@ export class MainView {
       {
         header: 'Добавить',
         handler: async () => {
-          await this.Presenter.OnAddPeriod(idx)
-        }
+          await this.Presenter.OnAddPeriod(idx);
+        },
       },
       {
         header: 'Сохранить',
         handler: async () => {
-          await this.Presenter.OnSave(idx)
-        }
+          await this.Presenter.OnSave(idx);
+        },
       },
       {
         header: 'В файл',
         handler: async () => {
-          await this.Presenter.OnSaveToFile(idx)
-        }
+          await this.Presenter.OnSaveToFile(idx);
+        },
       },
       {
         header: 'Показать все',
         handler: async () => {
-          await this.Presenter.OnShowAll(idx)
-        }
+          await this.Presenter.OnShowAll(idx);
+        },
       },
       {
         header: 'Закрыть',
         handler: async () => {
-          await this.Presenter.OnClose(idx)
-        }
-      }
-    ])
+          await this.Presenter.OnClose(idx);
+        },
+      },
+    ]);
   }
 
   public DrawEventsRow(idx: number, items: InterfaceExTLPeriod[]) {
     let Id: number;
-    const row = document.createElement('tr')
-    row.classList.add('row-data-' + idx)
-    let i = 0, last = -1
+    const row = document.createElement('tr');
+    row.classList.add('row-data-' + idx);
+    let i = 0,
+      last = -1;
     while (i < items.length) {
-      Id = items[i].item.Id
+      Id = items[i].item.Id;
       if (items[i].il - last !== 1) {
-        const td = document.createElement('td') as HTMLTableDataCellElement
-        td.classList.add('hidden_cell')
-        td.colSpan = items[i].il - last - 1
-        last = items[i].il - 1
-        row.append(td)
+        const td = document.createElement('td') as HTMLTableDataCellElement;
+        td.classList.add('hidden_cell');
+        td.colSpan = items[i].il - last - 1;
+        last = items[i].il - 1;
+        row.append(td);
       }
-      const td = document.createElement('td') as HTMLTableDataCellElement
-      td.id = 'cell-' + idx + '-' + Id
-      td.draggable = true
-      td.colSpan = items[i].ir - items[i].il + 1
-      td.classList.add('period_cell')
+      const td = document.createElement('td') as HTMLTableDataCellElement;
+      td.id = 'cell-' + idx + '-' + Id;
+      td.draggable = true;
+      td.colSpan = items[i].ir - items[i].il + 1;
+      td.classList.add('period_cell');
       if (items[i].item.Count > 0) {
-        td.classList.add('note')
+        td.classList.add('note');
       }
-      td.ondragstart = this.createDragstarthandler(idx, Id)
+      td.ondragstart = this.createDragstarthandler(idx, Id);
       td.ondragenter = (ev) => {
         ev.preventDefault();
-        (ev.target as HTMLTableCellElement).classList.add('period_cell_drop')
-      }
+        (ev.target as HTMLTableCellElement).classList.add('period_cell_drop');
+      };
       td.ondragleave = (ev) => {
-        (ev.target as HTMLTableCellElement).classList.remove('period_cell_drop')
-      }
+        (ev.target as HTMLTableCellElement).classList.remove('period_cell_drop');
+      };
       td.ondragover = (ev) => {
         ev.preventDefault();
-      }
-      td.ondrop = this.createDrophandler(idx, Id)
-      td.oncontextmenu = this.createContextmenuhandler(idx, Id)
-      last = items[i].ir
-      const txt = document.createTextNode(items[i].item.Name)
-      td.append(txt)
-      row.append(td)
-      i++
+      };
+      td.ondrop = this.createDrophandler(idx, Id);
+      td.oncontextmenu = this.createContextmenuhandler(idx, Id);
+      last = items[i].ir;
+      const txt = document.createTextNode(items[i].item.Name);
+      td.append(txt);
+      row.append(td);
+      i++;
     }
-    const header = document.getElementById('row-header-' + idx)
-    header.after(row)
+    const header = document.getElementById('row-header-' + idx);
+    header.after(row);
   }
 
   private createDrophandler(idx: number, id: number) {
     return (ev) => {
-      this.Presenter.OnDrop(ev, idx, id)
-    }
+      this.Presenter.OnDrop(ev, idx, id);
+    };
   }
 
   private createDragstarthandler(idx: number, id: number) {
     return (ev) => {
-      this.Presenter.OnDragStart(ev, idx, id)
-    }
+      this.Presenter.OnDragStart(ev, idx, id);
+    };
   }
 
   private createContextmenuhandler(idx: number, id: number) {
     return (ev) => {
-      ev.preventDefault()
-      this.Presenter.OnPeriodContextMenu(ev, idx, id)
-    }
+      ev.preventDefault();
+      this.Presenter.OnPeriodContextMenu(ev, idx, id);
+    };
   }
 
   /**
@@ -290,8 +301,8 @@ export class MainView {
    * @param idx
    */
   public RemoveHeader(idx: number) {
-    const row = this.mainTable.querySelector('#row-header-' + idx)
-    this.mainTable.removeChild(row)
+    const row = this.mainTable.querySelector('#row-header-' + idx);
+    this.mainTable.removeChild(row);
   }
 
   /**
@@ -299,9 +310,9 @@ export class MainView {
    * @param idx
    */
   public RemoveDataRows(idx: number) {
-    const rows = this.mainTable.querySelectorAll('tr.row-data-' + idx)
+    const rows = this.mainTable.querySelectorAll('tr.row-data-' + idx);
     for (const el of rows) {
-      this.mainTable.removeChild(el)
+      this.mainTable.removeChild(el);
     }
   }
 }

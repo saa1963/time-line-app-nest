@@ -1,8 +1,10 @@
 ﻿import { TLPeriod } from './TLPeriod';
-import {stringUtils } from './stringutils'
+import { stringUtils } from './stringutils';
+import { readyException } from 'jquery';
 
 export class ApiClient {
   private static instance: ApiClient;
+  private jwtToken: { access_token: string };
   private constructor() {
     // do something construct...
   }
@@ -15,98 +17,122 @@ export class ApiClient {
   }
 
   private HttpError(response: Response) {
-    return 'Ошибка HTTP - ' + response.status
+    return 'Ошибка HTTP - ' + response.status;
   }
 
   public async DoLogin(login: string, password: string): Promise<string> {
-  if ((login || '').trim() !== '' && (password || '').trim() !== '') {
-      const passwordMd5 = stringUtils.md5(password)
-      const response = await fetch('api/register/log', {
+    if ((login || '').trim() !== '' && (password || '').trim() !== '') {
+      const passwordMd5 = stringUtils.md5(password);
+      const response = await fetch('auth/logon', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({Login: login, Password: passwordMd5})
-      })
+        body: JSON.stringify({ Login: login, Password: passwordMd5 }),
+      });
       if (response.ok) {
-        return await response.text()
+        this.jwtToken = await response.json();
+        localStorage.setItem('tokenTL', this.jwtToken.access_token);
+        return '';
       } else {
-        return this.HttpError(response)
+        return this.HttpError(response);
       }
     } else {
-      return 'Не введены логин или пароль.'
+      return 'Не введены логин или пароль.';
     }
   }
 
   public async SaveTL(model: TLPeriod): Promise<string> {
-    const response = await fetch('api/storage/save', {
+    const response = await fetch('save', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + localStorage.getItem('tokenTL'),
       },
-      body: JSON.stringify({ s1: model.Name, s2: JSON.stringify(model) })
-    })
+      body: JSON.stringify({ s1: model.Name, s2: JSON.stringify(model) }),
+    });
+    console.log(response);
     if (response.ok) return '';
-    else return 'Ошибка: ' + await response.text()
+    else return 'Ошибка: ' + (await response.text());
+  }
+
+  public async TestToken(): Promise<string> {
+    const response = await fetch('test', {
+      method: 'GET',
+      headers: {
+        Authorization: 'Bearer ' + localStorage.getItem('tokenTL'),
+      },
+    });
+    if (response.ok) {
+      return await response.text();
+    } else {
+      throw '';
+    }
   }
 
   public async DoLogout(): Promise<boolean> {
-    const response = await fetch('api/register/logout')
-    return Boolean(await response.text())
+    localStorage.removeItem('tokenTL');
+    return true;
   }
 
   public async GetUsersList(): Promise<string[]> {
-    const response = await fetch('api/storage/list')
+    const response = await fetch('list', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + localStorage.getItem('tokenTL'),
+      },
+    });
     if (response.ok) {
-      return await response.json()
+      return await response.json();
     } else {
       throw 'Статус - ' + response.status + ' ' + response.statusText;
     }
   }
 
   public async GetTL(value: string): Promise<TLPeriod | string> {
-    const response = await fetch('api/storage/load', {
-      method: 'POST',
+    const response = await fetch('load?' + new URLSearchParams({ tlname: value }), {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
+        Authorization: 'Bearer ' + localStorage.getItem('tokenTL'),
       },
-      body: JSON.stringify({ s1: value, s2: '' })
-    })
+    });
     if (response.ok) {
-      const tline = await response.json()
-      const period = TLPeriod.CreateTLPeriod(tline)
-      period.Parent = null
-      return period
+      const tline = await response.json();
+      const period = TLPeriod.CreateTLPeriod(tline);
+      period.Parent = null;
+      return period;
     } else {
-      console.log(response.text())
-      return 'Ошибка загрузки данных' 
+      console.log(response.text());
+      return 'Ошибка загрузки данных';
     }
   }
 
-  public async DoRegister(login: string, email: string, password1: string, password2: string): Promise<string> {
+  public async DoRegister(
+    login: string,
+    email: string,
+    password1: string,
+    password2: string,
+  ): Promise<string> {
     if (password1 !== password2) {
-      return 'Не совпадают пароли'
-      }
-      const passwordMd5 = stringUtils.md5(password1)
-      console.log(password1)
-      console.log(passwordMd5)
-    const response = await fetch('api/register/reg', {
+      return 'Не совпадают пароли';
+    }
+    const passwordMd5 = stringUtils.md5(password1);
+    const response = await fetch('auth/newuser', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(
-        {
-          Login: login,
-          Email: email,
-          Password1: passwordMd5,
-          Password2: passwordMd5
-        })
-    })
+      body: JSON.stringify({
+        Login: login,
+        Email: email,
+        Password1: passwordMd5,
+        Password2: passwordMd5,
+      }),
+    });
     if (response.ok) {
-      return ''
+      return '';
     } else {
-      'Статус - ' + response.status + ' ' + response.statusText;
+      return (await response.json()).message;
     }
   }
 }

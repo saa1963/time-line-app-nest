@@ -2,7 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
-import { StorageModule } from './storage/storage.module';
+import { TlFileStorage } from './TlFileStorage';
+import { TlStorage } from './TlStorage';
 
 @Module({
   imports: [
@@ -10,9 +11,13 @@ import { StorageModule } from './storage/storage.module';
       isGlobal: true,
     }),
     AuthModule,
-    StorageModule,
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [
+    {
+      provide: TlStorage,
+      useClass: TlFileStorage,
+    },
+  ],
 })
 export class AppModule {}

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserStorage } from './auth.UserStorage';
 import path = require('path');
@@ -24,7 +24,7 @@ export class FileUserStorage extends UserStorage {
           this.logonDto.push({ Login: ms[0], Password: ms[2] });
         }
       });
-    }
+    } else throw new InternalServerErrorException(`Не существует путь ${this.filePath}`);
   }
   async Save(login: string, email: string, password: string): Promise<boolean> {
     if (await this.Contains(login)) {

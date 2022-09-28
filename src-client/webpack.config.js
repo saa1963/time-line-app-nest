@@ -1,6 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   entry: './index0.ts',
@@ -15,7 +15,7 @@ module.exports = {
     modules: ['node_modules'],
     extensions: ['.ts', '.tsx', '.js'],
     alias: {
-       jquery: "jquery/src/jquery"
+      jquery: 'jquery/src/jquery',
     },
   },
   module: {
@@ -37,19 +37,19 @@ module.exports = {
       },
       {
         test: /\.png/,
-        type: 'asset/resource'
+        type: 'asset/resource',
       },
     ],
   },
   plugins: [
-        new HtmlWebpackPlugin({
-            title: 'webpack Boilerplate',
-            template: path.resolve(__dirname, './html/template.html'), // шаблон
-            filename: 'index.html', // название выходного файла
-        }),
-        new webpack.ProvidePlugin({
-            $: 'jquery',
-            jQuery: 'jquery',
-        }),
-    ],
+    new HtmlWebpackPlugin({
+      title: 'webpack Boilerplate',
+      template: path.resolve(__dirname, './html/template.html'),
+      filename: 'index.html',
+    }),
+    new webpack.ProvidePlugin({
+      $: 'jquery',
+      jQuery: 'jquery',
+    }),
+  ],
 };

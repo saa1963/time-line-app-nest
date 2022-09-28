@@ -36,10 +36,11 @@ export class TlFileStorage extends TlStorage {
     });
     return files
       .filter((value) => {
-        console.log(value.name);
         return value.isFile() && re.test(value.name);
       })
-      .map((vl) => vl.name);
+      .map((vl) => {
+        return vl.name.substring(vl.name.indexOf('.') + 1, vl.name.lastIndexOf('.json'));
+      });
   }
   async Save(header: string, body: string, username: string): Promise<boolean> {
     await fs1.writeFile(this.Fname(header, username), body, { encoding: 'utf-8' });

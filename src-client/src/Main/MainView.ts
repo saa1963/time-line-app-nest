@@ -1,6 +1,7 @@
 ﻿import { MainPresenter, InterfaceExTLPeriod } from './MainPresenter';
 import { MainModel } from './MainModel';
 import { ApiClient } from '../ApiClient';
+import { match } from 'assert';
 const ZoomIn = require('./images/icons8-zoom-in-50.png');
 //import ZoomOut from "./images/icons8-zoom-out-50.png";
 const ZoomOut = require('./images/icons8-zoom-out-50.png');
@@ -139,7 +140,7 @@ export class MainView {
     const table = document.getElementsByTagName('table')[0];
     const row = document.createElement('tr');
     row.id = 'row-header-' + idx;
-    let td = document.createElement('td') as HTMLTableDataCellElement;
+    let td = document.createElement('td') as HTMLTableCellElement;
     if (isMain) {
       td.classList.add('tl_head');
     } else {
@@ -161,13 +162,13 @@ export class MainView {
     td.append(txt);
     row.append(td);
 
-    td = document.createElement('td') as HTMLTableDataCellElement;
+    td = document.createElement('td') as HTMLTableCellElement;
     td.append(this.CreateTLDropDown(idx));
     row.append(td);
     table.append(row);
   }
 
-  private CreateDropDown(header: string, mas: { header: string; handler: (ev) => void }[]) {
+  private CreateDropDown(header: string, mas: { header: string; handler: (ev: any) => void }[]) {
     const btnMenu = document.createElement('button') as HTMLButtonElement;
     btnMenu.type = 'button';
     btnMenu.setAttribute('data-bs-toggle', 'dropdown');
@@ -240,13 +241,13 @@ export class MainView {
     while (i < items.length) {
       Id = items[i].item.Id;
       if (items[i].il - last !== 1) {
-        const td = document.createElement('td') as HTMLTableDataCellElement;
+        const td = document.createElement('td') as HTMLTableCellElement;
         td.classList.add('hidden_cell');
         td.colSpan = items[i].il - last - 1;
         last = items[i].il - 1;
         row.append(td);
       }
-      const td = document.createElement('td') as HTMLTableDataCellElement;
+      const td = document.createElement('td') as HTMLTableCellElement;
       td.id = 'cell-' + idx + '-' + Id;
       td.draggable = true;
       td.colSpan = items[i].ir - items[i].il + 1;
@@ -315,4 +316,38 @@ export class MainView {
       this.mainTable.removeChild(el);
     }
   }
+
+  // /**
+  //  * Перенумеровать
+  //  * @param idx - индекс уже удаленного TL
+  //  * @param lastIdx - индекс последнего TL
+  //  */
+  // RenumerateItems(idx: number, lastIdx: number) {
+  //   for (let i = idx + 1; i <= lastIdx; i++) {
+  //     // i - индексы которые необходимо перенумеровать
+  //     const row = this.mainTable.querySelector<HTMLTableRowElement>('#row-header-' + i);
+  //     row.id = 'row-header-' + (i - 1);
+  //     const rows = this.mainTable.querySelectorAll<HTMLTableRowElement>('tr.row-data-' + i);
+  //     rows.forEach((row) => {
+  //       row.classList.remove('row-data-' + i);
+  //       row.classList.add('row-data-' + (i - 1));
+  //       const cellsCount = row.cells.length;
+  //       for (let j = 0; j < cellsCount; j++) {
+  //         const cell = row.cells.item(j);
+  //         const matchedClasses: string[] = [];
+  //         cell.classList.forEach((className) => {
+  //           if (className.startsWith('cell-')) {
+  //             matchedClasses.push(className);
+  //           }
+  //         });
+  //         matchedClasses.forEach((className) => {
+  //           cell.classList.remove(className);
+  //           const classNameParts = className.split('-');
+  //           const newClass = classNameParts[0] + '-' + (i - 1) + '-' + classNameParts[2];
+  //           cell.classList.add(newClass);
+  //         });
+  //       }
+  //     });
+  //   }
+  // }
 }

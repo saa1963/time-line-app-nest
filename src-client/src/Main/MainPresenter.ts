@@ -446,9 +446,10 @@ export class MainPresenter {
       this.view.DrawHeader(this.Count - 1, this.getHeaderText(this.Count - 1), tl.Parent === null);
       this.DrawTL(this.Count - 1, tl);
     });
-    this.model.evRemoveTimeLine.subscribe((idx) => {
-      this.view.RemoveHeader(idx);
-      this.view.RemoveDataRows(idx);
+    this.model.evRemoveTimeLine.subscribe(() => {
+      //this.view.RemoveHeader(idx);
+      //this.view.RemoveDataRows(idx);
+      this.Draw();
     });
     this.model.evAddPeriod.subscribe((t) => {
       this.view.RemoveDataRows(t[0]);

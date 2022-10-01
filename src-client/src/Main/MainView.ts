@@ -1,9 +1,6 @@
 ﻿import { MainPresenter, InterfaceExTLPeriod } from './MainPresenter';
 import { MainModel } from './MainModel';
-import { ApiClient } from '../ApiClient';
-import { match } from 'assert';
 const ZoomIn = require('./images/icons8-zoom-in-50.png');
-//import ZoomOut from "./images/icons8-zoom-out-50.png";
 const ZoomOut = require('./images/icons8-zoom-out-50.png');
 
 export class MainView {
@@ -23,22 +20,8 @@ export class MainView {
   constructor(model: MainModel) {
     this.Presenter = new MainPresenter(this, model);
 
-    ApiClient.getInstance()
-      .TestToken()
-      .then((login) => this.SetUserLabel(login))
-      .catch(() => this.ClearUserLabel());
-
     this.aLogin.onclick = async () => {
-      ApiClient.getInstance()
-        .TestToken()
-        .then(async () => {
-          ApiClient.getInstance().DoLogout();
-          this.ClearUserLabel();
-        })
-        .catch(async () => {
-          const login = await this.Presenter.OnLogin();
-          this.SetUserLabel(login);
-        });
+      await this.Presenter.OnLogin();
     };
     this.aReg.onclick = async () => {
       await this.Presenter.OnRegister();
@@ -75,13 +58,13 @@ export class MainView {
     }
   }
 
-  private SetUserLabel(user: string): void {
+  public SetUserLabel(user: string): void {
     this.lblUser.textContent = user;
     this.lblUser.style.display = 'unset';
     this.aLogin.textContent = 'Выход';
   }
 
-  private ClearUserLabel(): void {
+  public ClearUserLabel(): void {
     this.lblUser.style.display = 'none';
     this.aLogin.textContent = 'Вход';
   }
@@ -316,38 +299,4 @@ export class MainView {
       this.mainTable.removeChild(el);
     }
   }
-
-  // /**
-  //  * Перенумеровать
-  //  * @param idx - индекс уже удаленного TL
-  //  * @param lastIdx - индекс последнего TL
-  //  */
-  // RenumerateItems(idx: number, lastIdx: number) {
-  //   for (let i = idx + 1; i <= lastIdx; i++) {
-  //     // i - индексы которые необходимо перенумеровать
-  //     const row = this.mainTable.querySelector<HTMLTableRowElement>('#row-header-' + i);
-  //     row.id = 'row-header-' + (i - 1);
-  //     const rows = this.mainTable.querySelectorAll<HTMLTableRowElement>('tr.row-data-' + i);
-  //     rows.forEach((row) => {
-  //       row.classList.remove('row-data-' + i);
-  //       row.classList.add('row-data-' + (i - 1));
-  //       const cellsCount = row.cells.length;
-  //       for (let j = 0; j < cellsCount; j++) {
-  //         const cell = row.cells.item(j);
-  //         const matchedClasses: string[] = [];
-  //         cell.classList.forEach((className) => {
-  //           if (className.startsWith('cell-')) {
-  //             matchedClasses.push(className);
-  //           }
-  //         });
-  //         matchedClasses.forEach((className) => {
-  //           cell.classList.remove(className);
-  //           const classNameParts = className.split('-');
-  //           const newClass = classNameParts[0] + '-' + (i - 1) + '-' + classNameParts[2];
-  //           cell.classList.add(newClass);
-  //         });
-  //       }
-  //     });
-  //   }
-  // }
 }

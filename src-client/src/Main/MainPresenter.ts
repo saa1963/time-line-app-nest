@@ -447,8 +447,6 @@ export class MainPresenter {
       this.DrawTL(this.Count - 1, tl);
     });
     this.model.evRemoveTimeLine.subscribe(() => {
-      //this.view.RemoveHeader(idx);
-      //this.view.RemoveDataRows(idx);
       this.Draw();
     });
     this.model.evAddPeriod.subscribe((t) => {
@@ -463,6 +461,11 @@ export class MainPresenter {
     this.mainLine = new Array(kvo);
     this.InitMainLine(this.GetFirstInit());
     this.Draw();
+
+    ApiClient.getInstance()
+      .TestToken()
+      .then((login) => this.view.SetUserLabel(login))
+      .catch(() => this.view.ClearUserLabel());
   }
 
   private GetFirstInit() {
@@ -705,7 +708,20 @@ export class MainPresenter {
     }
   }
 
-  public async OnLogin(): Promise<string> {
+  public async OnLogin(): Promise<void> {
+    ApiClient.getInstance()
+      .TestToken()
+      .then(async () => {
+        ApiClient.getInstance().DoLogout();
+        this.view.ClearUserLabel();
+      })
+      .catch(async () => {
+        const login = await this._OnLogin();
+        this.view.SetUserLabel(login);
+      });
+  }
+
+  private async _OnLogin(): Promise<string> {
     const loginModel = new LoginModel(Globals.getCookie('timelineuser') || '');
     const loginView = new LoginView(loginModel);
     if (await loginView.ShowDialog()) {
@@ -721,10 +737,6 @@ export class MainPresenter {
     if (await regView.ShowDialog()) {
       await new BoxView(`Пользователь ${regModel.Login} успешно зарегистрирован`).Show();
     }
-  }
-
-  public async OnTest() {
-    const login = await ApiClient.getInstance().TestToken();
   }
 
   public async OnScaleForward(idx: number) {

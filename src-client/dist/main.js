@@ -24467,8 +24467,6 @@ class MainPresenter {
             this.DrawTL(this.Count - 1, tl);
         });
         this.model.evRemoveTimeLine.subscribe(() => {
-            //this.view.RemoveHeader(idx);
-            //this.view.RemoveDataRows(idx);
             this.Draw();
         });
         this.model.evAddPeriod.subscribe((t) => {
@@ -24483,6 +24481,10 @@ class MainPresenter {
         this.mainLine = new Array(kvo);
         this.InitMainLine(this.GetFirstInit());
         this.Draw();
+        ApiClient_1.ApiClient.getInstance()
+            .TestToken()
+            .then((login) => this.view.SetUserLabel(login))
+            .catch(() => this.view.ClearUserLabel());
     }
     get Period() {
         return this.mPeriod;
@@ -25042,6 +25044,20 @@ class MainPresenter {
     }
     OnLogin() {
         return __awaiter(this, void 0, void 0, function* () {
+            ApiClient_1.ApiClient.getInstance()
+                .TestToken()
+                .then(() => __awaiter(this, void 0, void 0, function* () {
+                ApiClient_1.ApiClient.getInstance().DoLogout();
+                this.view.ClearUserLabel();
+            }))
+                .catch(() => __awaiter(this, void 0, void 0, function* () {
+                const login = yield this._OnLogin();
+                this.view.SetUserLabel(login);
+            }));
+        });
+    }
+    _OnLogin() {
+        return __awaiter(this, void 0, void 0, function* () {
             const loginModel = new LoginModel_1.LoginModel(Globals_1.Globals.getCookie('timelineuser') || '');
             const loginView = new LoginView_1.LoginView(loginModel);
             if (yield loginView.ShowDialog()) {
@@ -25059,11 +25075,6 @@ class MainPresenter {
             if (yield regView.ShowDialog()) {
                 yield new BoxView_1.BoxView(`Пользователь ${regModel.Login} успешно зарегистрирован`).Show();
             }
-        });
-    }
-    OnTest() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const login = yield ApiClient_1.ApiClient.getInstance().TestToken();
         });
     }
     OnScaleForward(idx) {
@@ -25195,7 +25206,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MainView = void 0;
 const MainPresenter_1 = __webpack_require__(/*! ./MainPresenter */ "./Main/MainPresenter.ts");
-const ApiClient_1 = __webpack_require__(/*! ../ApiClient */ "./ApiClient.ts");
 const ZoomIn = __webpack_require__(/*! ./images/icons8-zoom-in-50.png */ "./Main/images/icons8-zoom-in-50.png");
 //import ZoomOut from "./images/icons8-zoom-out-50.png";
 const ZoomOut = __webpack_require__(/*! ./images/icons8-zoom-out-50.png */ "./Main/images/icons8-zoom-out-50.png");
@@ -25210,21 +25220,8 @@ class MainView {
         this.btnLoadFromBD = document.getElementById('load');
         this.tls = document.getElementById('tls');
         this.Presenter = new MainPresenter_1.MainPresenter(this, model);
-        ApiClient_1.ApiClient.getInstance()
-            .TestToken()
-            .then((login) => this.SetUserLabel(login))
-            .catch(() => this.ClearUserLabel());
         this.aLogin.onclick = () => __awaiter(this, void 0, void 0, function* () {
-            ApiClient_1.ApiClient.getInstance()
-                .TestToken()
-                .then(() => __awaiter(this, void 0, void 0, function* () {
-                ApiClient_1.ApiClient.getInstance().DoLogout();
-                this.ClearUserLabel();
-            }))
-                .catch(() => __awaiter(this, void 0, void 0, function* () {
-                const login = yield this.Presenter.OnLogin();
-                this.SetUserLabel(login);
-            }));
+            yield this.Presenter.OnLogin();
         });
         this.aReg.onclick = () => __awaiter(this, void 0, void 0, function* () {
             yield this.Presenter.OnRegister();
